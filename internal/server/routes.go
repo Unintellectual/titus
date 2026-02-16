@@ -2,12 +2,12 @@ package server
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"log"
+	"net/http"
+	"titus/internal/utils"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -22,9 +22,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 		MaxAge:           300,
 	}))
 
-	r.Get("/", s.HelloWorldHandler)
-
+	r.Get("/", s.defaultHandler)
 	r.Get("/health", s.healthHandler)
+
+	r.Get("/hello", s.HelloWorldHandler)
+	r.Get("/ticket", s.TicketIdHandler)
 
 	return r
 }
@@ -43,5 +45,39 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResp, _ := json.Marshal(s.db.Health())
+	_, _ = w.Write(jsonResp)
+}
+
+func (s *Server) TicketIdHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, err := utils.GenerateID(8)
+	if err != nil {
+		http.Error(w, "failed to generate ticket ID", http.StatusInternalServerError)
+		return
+	}
+
+	resp := map[string]string{
+		"Ticket": id,
+	}
+
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, "failed to marshal response", http.StatusInternalServerError)
+		return
+	}
+
+	_, _ = w.Write(jsonResp)
+}
+
+func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
+	resp := make(map[string]string)
+	resp["message"] = "Hello"
+
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("error handling JSON marshal. Err: %v", err)
+	}
+
 	_, _ = w.Write(jsonResp)
 }

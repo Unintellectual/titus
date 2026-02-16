@@ -1,6 +1,6 @@
 # Project titus
 
-One Paragraph of project description goes here
+Ticket Generator and Monitoring for Undergraduate manuscripts of Cavite State University
 
 ## Getting Started
 
