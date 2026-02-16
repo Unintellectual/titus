@@ -22,6 +22,10 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+
+	CreateTicket(id string) error
+	GetTicketStatus(id string) (string, error)
+	UpdateTicketStatus(id string, newStatus string) error
 }
 
 type service struct {
@@ -49,7 +53,52 @@ func New() Service {
 	dbInstance = &service{
 		db: db,
 	}
+
+	createTable := `
+	CREATE TABLE IF NOT EXISTS tickets (
+		id TEXT PRIMARY KEY,
+		status TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`
+	_, err = db.Exec(createTable)
+	if err != nil {
+		log.Fatal("failed to create tickets table:", err)
+	}
+
 	return dbInstance
+}
+
+func (s *service) CreateTicket(id string) error {
+	query := `INSERT INTO tickets (id, status, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)`
+	_, err := s.db.Exec(query, id, "open")
+	return err
+}
+
+func (s *service) GetTicketStatus(id string) (string, error) {
+	var status string
+	query := `SELECT status FROM tickets WHERE id = ?`
+	err := s.db.QueryRow(query, id).Scan(&status)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("ticket not found")
+		}
+		return "", err
+	}
+	return status, nil
+}
+
+func (s *service) UpdateTicketStatus(id string, newStatus string) error {
+	query := `UPDATE tickets SET status = ? WHERE id = ?`
+	res, err := s.db.Exec(query, newStatus, id)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("ticket not found")
+	}
+	return nil
 }
 
 // Health checks the health of the database connection by pinging the database.

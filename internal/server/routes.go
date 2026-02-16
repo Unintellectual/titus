@@ -57,17 +57,37 @@ func (s *Server) TicketIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := map[string]string{
-		"Ticket": id,
-	}
-
-	jsonResp, err := json.Marshal(resp)
+	// Save ticket in DB
+	err = s.db.CreateTicket(id)
 	if err != nil {
-		http.Error(w, "failed to marshal response", http.StatusInternalServerError)
+		http.Error(w, "failed to save ticket", http.StatusInternalServerError)
 		return
 	}
 
-	_, _ = w.Write(jsonResp)
+	resp := map[string]string{
+		"ticket": id,
+		"status": "open",
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (s *Server) GetTicketStatusHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	id := chi.URLParam(r, "id")
+
+	status, err := s.db.GetTicketStatus(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	resp := map[string]string{
+		"ticket": id,
+		"status": status,
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
