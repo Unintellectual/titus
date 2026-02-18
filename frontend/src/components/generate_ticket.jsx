@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function App() {
+function GenerateTicket() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,5 +41,5 @@ function App() {
   );
 }
 
-export default App;
+export default GenerateTicket;
 
