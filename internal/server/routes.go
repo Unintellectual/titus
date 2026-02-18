@@ -22,25 +22,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 		MaxAge:           300,
 	}))
 
-	r.Get("/", s.defaultHandler)
-	r.Get("/health", s.healthHandler)
+	r.Get("/api/health", s.healthHandler)
 
-	r.Get("/hello", s.HelloWorldHandler)
-	r.Get("/ticket", s.TicketIdHandler)
+	r.Get("/api/ticket", s.TicketIdHandler)
 
+	// Serve React static files (MUST be last)
+	r.Handle("/*", http.FileServer(http.Dir("./frontend/dist")))
 	return r
-}
-
-func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("error handling JSON marshal. Err: %v", err)
-	}
-
-	_, _ = w.Write(jsonResp)
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
