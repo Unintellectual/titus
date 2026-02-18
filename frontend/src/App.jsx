@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [ticket, setTicket] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchTicket = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/ticket");
+      const data = await response.json();
+      setTicket(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    setLoading(false);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ padding: "40px", fontFamily: "Arial" }}>
+      <button onClick={fetchTicket}>Generate Ticket</button>
+
+      {loading && <p>Loading...</p>}
+
+      {ticket && !loading && (
+        <div
+          style={{
+            border: "2px solid black",
+            padding: "20px",
+            marginTop: "20px",
+            width: "300px",
+            backgroundColor: "#000000",
+            color: "#ffffff",
+          }}
+        >
+          <h3>Ticket Info</h3>
+          <p><strong>Ticket Number:</strong> {ticket.Ticket}</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
+
